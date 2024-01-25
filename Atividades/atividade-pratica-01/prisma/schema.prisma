@@ -1,0 +1,95 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Estado {
+  id    Int     @id @default(autoincrement())
+  nome  String
+  sigla String @unique
+  cidades Cidade[] @relation("EstadoToCidade")
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("estados")
+}
+
+model TipoSanguineo {
+  id        Int      @id @default(autoincrement())
+  tipo      String
+  fator     String
+  pessoas   Pessoa[] @relation("TipoSanguineoToPessoa")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("tipos_sanguineos")
+}
+
+model Cidade {
+  id            Int      @id @default(autoincrement())
+  nome          String
+  estadoId      Int
+  estado        Estado   @relation(name: "EstadoToCidade", fields: [estadoId], references: [id])
+  pessoas       Pessoa[] @relation("CidadeToPessoa")
+  locaisColeta  LocalColeta[] @relation("CidadeToLocalColeta")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("cidades")
+}
+
+model Pessoa {
+  id           Int            @id @default(autoincrement())
+  nome         String
+  rua          String
+  numero       String
+  complemento  String
+  rg           String
+  cidadeId     Int
+  cidade       Cidade   @relation(name: "CidadeToPessoa", fields: [cidadeId], references: [id])
+  tipoId       Int
+  tipoSanguineo TipoSanguineo @relation(name: "TipoSanguineoToPessoa", fields: [tipoId], references: [id])
+  doacoes Doacao[] @relation("PessoaToDoacao")
+
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@map("pessoas")
+}
+
+model LocalColeta {
+  id         Int      @id @default(autoincrement())
+  nome       String
+  rua        String
+  numero     String
+  complemento String
+  cidadeId   Int
+  cidade     Cidade   @relation(name: "CidadeToLocalColeta", fields: [cidadeId], references: [id])
+  doacoes Doacao[] @relation("LocalColetaToDoacao")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("locais_coleta")
+}
+
+model Doacao {
+  id         Int         @id @default(autoincrement())
+  pessoaId   Int
+  pessoa     Pessoa   @relation(name: "PessoaToDoacao", fields: [pessoaId], references: [id])
+  localId    Int
+  localColeta LocalColeta @relation(name: "LocalColetaToDoacao", fields: [localId], references: [id])
+  data       DateTime
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  @@map("doacoes")
+}
